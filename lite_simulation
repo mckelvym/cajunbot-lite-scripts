@@ -1,0 +1,116 @@
+#!/bin/bash
+# Copyright (C) 2008 University of Louisiana at Lafayette
+# Authors: Mark McKelvy
+
+script_name=`basename ${0}`
+
+shutdown(){
+    echo "Shutting down..."
+    case "$venue" in
+	flex)
+	    pkill start_simulator
+	    sleep 1
+	    stop_testing_sequence;;
+	tis)
+	    for machine in $tis_machine_list ; do
+		ssh $machine "pkill start_simulator; sleep 1; stop_testing_sequence;" &
+	    done
+	    pkill start_simulator
+	    sleep 1
+	    stop_testing_sequence
+	    wait
+    esac
+    echo "done"
+}
+
+show_options(){
+    #Add displayable options here
+    echo
+    echo "This script is used for starting up simulation in lite center."
+    echo
+    echo "Usage: $script_name <start_simulator_opts>"
+    echo
+    exit
+}
+
+get_options(){
+    #Catch arguments here
+    if [ "$1" == "-?" ] ; then
+	show_options
+    fi
+}
+
+set_defaults(){
+    venue=$LITE_VENUE
+    lite_cfg=lite_cfg
+
+    tis_machine_list="ws1 ws2 ws3 ws4 ws5"
+}
+
+sanity_check(){
+    if [ "$venue" != "flex" -a \
+	"$venue" != "tis" ] ; then
+	echo "($script_name) error: incorrect venue set - $venue."
+	exit -1
+    fi
+    
+    if [ ! -d "$CBSUPPORT" ] ; then
+	echo "($script_name) error: can't find cbsupport=$CBSUPPORT"
+	exit -1
+    fi
+
+    $lite_cfg
+    if [ ! -n "$VJ_BASE_DIR" -o ! -n "$VJ_CFG_PATH" ] ; then
+	echo "($script_name) error: VJ_BASE_DIR or VJ_CFG_PATH not set."
+	exit -1
+    fi
+}
+
+start_flex_simulation(){
+    start_simulator $*
+}
+
+start_tis_simulation(){
+    #kill running programs on other machines
+    for machine in $tis_machine_list ; do
+	ssh $machine "stop_testing_sequence; clean_shared_mem" &
+	echo "ssh $machine \"stop_testing_sequence; clean_shared_mem\" &"
+    done
+    stop_testing_sequence
+    clean_shared_mem
+    wait
+
+    #setup cbviz options
+    cbviz_opts=
+    while getopts "k:I:r:V:?" option; do
+	case "$option" in
+	    k) cbviz_opts="$cbviz_opts -l $OPTARG";;
+	    I) cbviz_opts="$cbviz_opts -i $OPTARG";;
+	    r) cbviz_opts="$cbviz_opts -N $OPTARG";;
+	    V) cbviz_opts="$cbviz_opts -v $OPTARG";;
+	    *) echo "Skipping '$option $OPTARG' for cbviz.";;
+	esac
+    done
+
+    #start local simulation
+    start_simulator -D $CB_DATA_NET $* &
+    sleep 4
+
+    #start remote display
+    for machine in $tis_machine_list ; do
+	ssh $machine "export CB_DATA_NET=$CB_DATA_NET; cb_remote" &
+	ssh $machine "cbviz -m simulation $cbviz_opts" &
+    done
+}
+
+set_defaults $*
+get_options $*
+sanity_check $*
+
+case "$venue" in
+    flex)
+	start_flex_simulation $*;;
+    tis)
+	start_tis_simulation $*;;
+esac
+
