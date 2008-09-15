@@ -2,80 +2,49 @@
 # Copyright (C) 2008 University of Louisiana at Lafayette
 # Authors: Mark McKelvy
 
-script_name=`basename ${0}`
 
-show_options(){
-    #Add displayable options here
-    echo
-    echo "This script is used in the LITE venues for configuration
-of common settings."
-    echo
-    echo "Usage: $script_name <options>"
-    echo -e "\t[-p str]\t\t Arguments for litepackage script [$litepkg_opts]."
-    echo -e "\t[-V str]\t\t Set LITE venue (flex, tis) [$venue]."
-    echo
-    exit
-}
-
-get_options(){
-    #Catch arguments here
-    while getopts "p:V:?" option; do
-	case "$option" in
-	    #Handle arguments here
-	    p) litepkg_opts="$OPTARG";;
-	    V) venue="$OPTARG";;
-	    *) show_options;;
-	esac
-    done
-}
-
-set_defaults(){
-    venue=$LITE_VENUE
+source_lite_scripts(){
     lite_scripts_path=/research/tools/lite/scripts
 
     literc=$lite_scripts_path/literc
     literc_opts=gcc.debug
-
     litepkg=$lite_scripts_path/litepackage
     litepkg_opts="vrjuggler 2.2.0"
-
     vj_cfg_path=$CBSUPPORT
-}
-
-sanity_check(){
-    if [ "$venue" != "flex" -a \
-	"$venue" != "tis" ] ; then
-	echo "($script_name) error: incorrect venue set - $venue."
-	exit -1
-    fi
-    
-    if [ ! -d "$CBSUPPORT" ] ; then
-	echo "($script_name) error: can't find cbsupport=$CBSUPPORT"
-	exit -1
-    fi
 
     if [ ! -d "$lite_scripts_path" ] ; then
-	echo "($script_name) error: bad path to lite scripts - $lite_scripts_path"
+	echo "error: bad path to lite scripts - $lite_scripts_path"
+	exit -1
+    fi
+
+    if [ -f "$literc" ] ; then
+	source $literc $literc_opts
+    else
+	echo "warning: couldn't find $literc, skipping."
+    fi
+
+    venue=$LITE_VENUE
+
+    if [ "$venue" != "flex" -a \
+	"$venue" != "tis" ] ; then
+	echo "error: incorrect venue set - $venue."
+	exit -1
+    fi
+
+    if [ ! -d "$CBSUPPORT" ] ; then
+	echo "error: can't find cbsupport=$CBSUPPORT"
 	exit -1
     fi
 
     if [ ! -d "$vj_cfg_path" ] ; then
-	echo "($script_name) error: bad path for vj_cfg - $vj_cfg_path"
+	echo "error: bad path for vj_cfg - $vj_cfg_path"
 	exit -1
-    fi
-}
-
-source_lite_scripts(){
-    if [ -f "$literc" ] ; then
-	source $literc $literc_opts
-    else
-	echo "($script_name) warning: couldn't find $literc, skipping."
     fi
 
     if [ -f "$litepkg" ] ; then
 	source $litepkg $litepkg_opts
     else
-	echo "($script_name) warning: couldn't find $litepkg, skipping."
+	echo "warning: couldn't find $litepkg, skipping."
     fi
 }
 
@@ -96,14 +65,10 @@ setup_vj_cfg_path(){
 	    fi
 	    export VJ_CFG_PATH=$vj_cfg_path/cluster;;
 	*) 
-	    echo "($script_name) error: bad venue - $venue."
+	    echo "error: bad venue - $venue."
 	    exit -1;;
     esac
 }
-
-set_defaults $*
-get_options $*
-sanity_check $*
 
 source_lite_scripts
 setup_vj_cfg_path
@@ -123,4 +88,5 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/trackd/bin
 export PATH=$PATH:$CBHOME/bin
 
 export PRISM_COMPUTER=y
+
 

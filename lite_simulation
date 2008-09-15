@@ -67,6 +67,7 @@ sanity_check(){
 }
 
 start_flex_simulation(){
+    echo "start_simulator $*"
     start_simulator $*
 }
 
