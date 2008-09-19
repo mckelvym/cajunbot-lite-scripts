@@ -83,7 +83,8 @@ start_tis_simulation(){
 
     #setup cbviz options
     cbviz_opts=
-    while getopts "k:I:r:V:?" option; do
+    while getopts "k:I:r:V:a:b:Bd:D:fg:I:Lm:MN:oO:p:PR:t:u:vwx?"\
+	option; do
 	case "$option" in
 	    k) cbviz_opts="$cbviz_opts -l $OPTARG";;
 	    I) cbviz_opts="$cbviz_opts -i $OPTARG";;
@@ -94,7 +95,9 @@ start_tis_simulation(){
     done
 
     #start local simulation
-    start_simulator -D $CB_DATA_NET $* &
+    echo "cbviz_opts=$cbviz_opts"
+    echo "start_simulator $* -D $CB_DATA_NET &"
+    start_simulator $* -D $CB_DATA_NET &
     sleep 4
 
     #start remote display
