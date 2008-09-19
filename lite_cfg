@@ -26,7 +26,7 @@ source_lite_scripts(){
     venue=$LITE_VENUE
 
     if [ "$venue" != "flex" -a \
-	"$venue" != "tis" ] ; then
+	"$venue" != "cluster.tis" ] ; then
 	echo "error: incorrect venue set - $venue."
 	exit -1
     fi
@@ -57,8 +57,8 @@ setup_vj_cfg_path(){
 		cd - >& /dev/null
 	    fi
 	    export VJ_CFG_PATH=$vj_cfg_path/multipipe;;
-	tis)
-	    export CB_DATA_NET=192.20.0.255:5000
+	cluster.tis)
+	    export CB_DATA_NET=192.20.255.255:5000
 	    if [ "$link_path" != "lib_x86_64/" ] ; then
 		cd $CBSUPPORT; unlink lib; ln -s lib_x86_64 lib
 		cd - >& /dev/null
