@@ -11,7 +11,7 @@ shutdown(){
 	    pkill start_simulator
 	    sleep 1
 	    stop_testing_sequence;;
-	tis)
+	cluster.tis)
 	    for machine in $tis_machine_list ; do
 		ssh $machine "pkill start_simulator; sleep 1; stop_testing_sequence;" &
 	    done
@@ -49,7 +49,7 @@ set_defaults(){
 
 sanity_check(){
     if [ "$venue" != "flex" -a \
-	"$venue" != "tis" ] ; then
+	"$venue" != "cluster.tis" ] ; then
 	echo "($script_name) error: incorrect venue set - $venue."
 	exit -1
     fi
@@ -59,7 +59,7 @@ sanity_check(){
 	exit -1
     fi
 
-    $lite_cfg
+    . $lite_cfg
     if [ ! -n "$VJ_BASE_DIR" -o ! -n "$VJ_CFG_PATH" ] ; then
 	echo "($script_name) error: VJ_BASE_DIR or VJ_CFG_PATH not set."
 	exit -1
@@ -99,7 +99,7 @@ start_tis_simulation(){
 
     #start remote display
     for machine in $tis_machine_list ; do
-	ssh $machine "export CB_DATA_NET=$CB_DATA_NET; cb_remote" &
+	ssh $machine ". lite_cfg; cb_remote" &
 	ssh $machine "cbviz -m simulation $cbviz_opts" &
     done
 }
@@ -111,7 +111,7 @@ sanity_check $*
 case "$venue" in
     flex)
 	start_flex_simulation $*;;
-    tis)
+    cluster.tis)
 	start_tis_simulation $*;;
 esac
 
