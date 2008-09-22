@@ -53,14 +53,14 @@ setup_vj_cfg_path(){
     case "$venue" in
 	flex)
 	    if [ "$link_path" != "lib_ia64/" ] ; then
-		cd $CBSUPPORT; unlink lib; ln -s lib_ia64 lib
+		cd $CBSUPPORT && unlink lib && ln -s lib_ia64 lib
 		cd - >& /dev/null
 	    fi
 	    export VJ_CFG_PATH=$vj_cfg_path/multipipe;;
 	cluster.tis)
 	    export CB_DATA_NET=192.20.255.255:5000
 	    if [ "$link_path" != "lib_x86_64/" ] ; then
-		cd $CBSUPPORT; unlink lib; ln -s lib_x86_64 lib
+		cd $CBSUPPORT && unlink lib && ln -s lib_x86_64 lib
 		cd - >& /dev/null
 	    fi
 	    export VJ_CFG_PATH=$vj_cfg_path/cluster;;
@@ -71,22 +71,28 @@ setup_vj_cfg_path(){
 }
 
 setup_cbsystem_path(){
-    link_path=`ls --color=never -l $HOME | awk '/cbsystem/{ for (i = 0; i <= NF; i++){ if($i == "cbsystem") print $NF}}'`
-    case "$venue" in
-	flex)
-	    if [ "$link_path" != "cbsystem_flex" ] ; then
-		cd $HOME; unlink cbsystem; ln -s cbsystem_flex cbsystem
-		cd - >& /dev/null
-	    fi
-	cluster.tis)
-	    if [ "$link_path" != "cbsystem_tis" ] ; then
-		cd $HOME; unlink cbsystem; ln -s cbsystem_tis cbsystem
-		cd - >& /dev/null
-	    fi
-	*)
-	    echo "error: bad venue - $venue."
-	    exit -1;;
-    esac
+    if [ ! -L $HOME/cbsystem ] ; then
+	echo "Error: cbsystem is a directory, needs to be symlink."
+    else
+	link_path=`ls --color=never -l $HOME | awk '/cbsystem/{ for (i = 0; i <= NF; i++){ if($i == "cbsystem") print $NF}}'`
+	case "$venue" in
+	    flex)
+		if [ "$link_path" != "cbsystem_flex/" ] ; then
+		    cd $HOME && unlink cbsystem && ln -s cbsystem_flex cbsystem
+		    cd - >& /dev/null
+		fi
+		;;
+	    cluster.tis)
+		if [ "$link_path" != "cbsystem_tis/" ] ; then
+		    cd $HOME && unlink cbsystem && ln -s cbsystem_tis cbsystem
+		    cd - >& /dev/null
+		fi
+		;;
+	    *)
+		echo "error: bad venue - $venue."
+		exit -1;;
+	esac
+    fi
 }
 
 source_lite_scripts
