@@ -42,7 +42,7 @@ get_options(){
 
 set_defaults(){
     venue=$LITE_VENUE
-    lite_cfg=lite_cfg
+    lite_cfg=$CBSUPPORT/lite_scripts/lite_cfg
 
     tis_machine_list="ws1 ws2 ws3 ws4 ws5"
 }
@@ -59,7 +59,7 @@ sanity_check(){
 	exit -1
     fi
 
-    . $lite_cfg
+    source $lite_cfg
     if [ ! -n "$VJ_BASE_DIR" -o ! -n "$VJ_CFG_PATH" ] ; then
 	echo "($script_name) error: VJ_BASE_DIR or VJ_CFG_PATH not set."
 	exit -1
@@ -83,7 +83,7 @@ start_tis_simulation(){
 
     #setup cbviz options
     cbviz_opts=
-    while getopts "k:I:r:V:a:b:Bd:D:fg:I:Lm:MN:oO:p:PR:t:u:vwx?"\
+    while getopts "k:I:r:V:a:b:Bd:D:fg:I:Lm:MN:oO:p:PR:t:u:vw:xX?"\
 	option; do
 	case "$option" in
 	    k) cbviz_opts="$cbviz_opts -l $OPTARG";;
@@ -102,8 +102,8 @@ start_tis_simulation(){
 
     #start remote display
     for machine in $tis_machine_list ; do
-	ssh $machine ". lite_cfg; cb_remote" &
-	ssh $machine "cbviz -m simulation $cbviz_opts" &
+	ssh $machine "source ~/.bashrc && source $CBSUPPORT/lite_scripts/lite_cfg && cb_remote" &
+	ssh $machine "source $CBSUPPORT/lite_scripts/lite_cfg && cbviz -m simulation $cbviz_opts" &
     done
 }
 
