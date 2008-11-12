@@ -53,7 +53,7 @@ sanity_check(){
 	echo "($script_name) error: incorrect venue set - $venue."
 	exit -1
     fi
-    
+
     if [ ! -d "$CBSUPPORT" ] ; then
 	echo "($script_name) error: can't find cbsupport=$CBSUPPORT"
 	exit -1
@@ -102,8 +102,8 @@ start_tis_simulation(){
 
     #start remote display
     for machine in $tis_machine_list ; do
-	ssh $machine "source ~/.bashrc && source $CBSUPPORT/lite_scripts/lite_cfg && cb_remote" &
-	ssh $machine "source $CBSUPPORT/lite_scripts/lite_cfg && cbviz -m simulation $cbviz_opts" &
+	ssh $machine "source ~/.bashrc; source $CBSUPPORT/lite_scripts/lite_cfg; cb_remote" &
+	ssh $machine "source ~/.bashrc; source $CBSUPPORT/lite_scripts/lite_cfg; cbviz -m simulation $cbviz_opts" &
     done
 }
 

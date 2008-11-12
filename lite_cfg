@@ -52,14 +52,14 @@ setup_vj_cfg_path(){
     link_path=`ls -l $CBSUPPORT | grep "lib -" | sed -e 's/ /\n/g' | tail -n 1`
     case "$venue" in
 	flex)
-	    if [ "$link_path" != "lib_ia64/" ] ; then
+	    if [ "$link_path" != "lib_ia64" ] ; then
 		cd $CBSUPPORT && unlink lib && ln -s lib_ia64 lib
 		cd - >& /dev/null
 	    fi
 	    export VJ_CFG_PATH=$vj_cfg_path/multipipe;;
 	cluster.tis)
 	    export CB_DATA_NET=192.20.255.255:5000
-	    if [ "$link_path" != "lib_x86_64/" ] ; then
+	    if [ "$link_path" != "lib_x86_64" ] ; then
 		cd $CBSUPPORT && unlink lib && ln -s lib_x86_64 lib
 		cd - >& /dev/null
 	    fi
