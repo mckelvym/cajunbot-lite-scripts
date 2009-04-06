@@ -83,9 +83,10 @@ start_tis_simulation(){
 
     #setup cbviz options
     cbviz_opts=
-    while getopts "k:I:r:V:a:b:Bd:D:fg:I:Lm:MN:oO:p:PR:t:u:vw:xX?"\
+    while getopts "c:k:I:r:V:a:b:Bd:D:fg:I:Lm:MN:oO:p:PR:t:u:vw:xX?"\
 	option; do
 	case "$option" in
+	    c) cbviz_opts="$cbviz_opts -c $OPTARG";;
 	    k) cbviz_opts="$cbviz_opts -l $OPTARG";;
 	    I) cbviz_opts="$cbviz_opts -i $OPTARG";;
 	    r) cbviz_opts="$cbviz_opts -N $OPTARG";;
