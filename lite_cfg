@@ -18,6 +18,7 @@ source_lite_scripts(){
     fi
 
     if [ -f "$literc" ] ; then
+	echo "source $literc $literc_opts"
 	source $literc $literc_opts
     else
 	echo "warning: couldn't find $literc, skipping."
@@ -26,7 +27,8 @@ source_lite_scripts(){
     venue=$LITE_VENUE
 
     if [ "$venue" != "flex" -a \
-	"$venue" != "cluster.tis" ] ; then
+	"$venue" != "cluster.tis" -a \
+	"$venue" != "standalone" ] ; then
 	echo "error: incorrect venue set - $venue."
 	exit -1
     fi
@@ -64,7 +66,13 @@ setup_vj_cfg_path(){
 		cd - >& /dev/null
 	    fi
 	    export VJ_CFG_PATH=$vj_cfg_path/cluster;;
-
+	standalone)
+	    export CB_DATA_NET=10.1.10.255:5000
+	    if [ "$link_path" != "lib_x86_64" ] ; then
+		cd $CBSUPPORT && unlink lib && ln -s lib_x86_64 lib
+		cd - >& /dev/null
+	    fi
+	    export VJ_CFG_PATH=$vj_cfg_path/cluster;;
 	*)
 	    echo "error: bad venue - $venue."
 	    exit -1;;
@@ -81,6 +89,12 @@ setup_cbsystem_path(){
 	    fi
 	    ;;
 	cluster.tis)
+	    if [ "$link_path" != "cbsystem_tis" ] ; then
+		cd $HOME && unlink cbsystem && ln -s cbsystem_tis cbsystem
+		cd - >& /dev/null
+	    fi
+	    ;;
+	standalone)
 	    if [ "$link_path" != "cbsystem_tis" ] ; then
 		cd $HOME && unlink cbsystem && ln -s cbsystem_tis cbsystem
 		cd - >& /dev/null

@@ -33,12 +33,22 @@ set_defaults(){
     venue=$LITE_VENUE
     lite_cfg=$CBSUPPORT/lite_scripts/lite_cfg
 
-    tis_machine_list="ws1 ws2 ws3 ws4 ws5"
+    case "$venue" in
+	flex) ;;
+	cluster.tis)
+	    tis_machine_list="ws1 ws2 ws3 ws4 ws5";;
+	standalone)
+	    tis_machine_list="tiscluster2 tiscluster3 tiscluster4 tiscluster5 tiscluster6";;
+	*)
+	    echo "($script_name) error: incorrect venue set - $venue."
+	    exit -1;;
+    esac
 }
 
 sanity_check(){
     if [ "$venue" != "flex" -a \
-	"$venue" != "cluster.tis" ] ; then
+	"$venue" != "cluster.tis" -a \
+	"$venue" != "standalone" ] ; then
 	echo "($script_name) error: incorrect venue set - $venue."
 	exit -1
     fi
@@ -48,6 +58,7 @@ sanity_check(){
 	exit -1
     fi
 
+    echo "SOURCING.."
     source $lite_cfg
     if [ ! -n "$VJ_BASE_DIR" -o ! -n "$VJ_CFG_PATH" ] ; then
 	echo "($script_name) error: VJ_BASE_DIR or VJ_CFG_PATH not set."
@@ -71,7 +82,11 @@ start_flex_visualization(){
 
 start_tis_visualization(){
     #kill running programs on other machines
-#    clean_shared_mem_all
+    clean_shared_mem_all
+    for machine in $tis_machine_list ; do
+	ssh $machine "stop_testing_sequence;" &
+	echo "ssh $machine \"stop_testing_sequence;\" &"
+    done
 
     #setup cbviz options
     cbviz_opts=$*
@@ -83,18 +98,24 @@ start_tis_visualization(){
 
     #start remote display
     for machine in $tis_machine_list ; do
-	ssh $machine "source ~/.bashrc; source $CBSUPPORT/lite_scripts/lite_cfg; cbviz -m simulation $cbviz_opts" &
+	ssh $machine "source ~/.bashrc; source $CBSUPPORT/lite_scripts/lite_cfg; cbviz $cbviz_opts" &
     done
 }
 
+echo "SETTING DEFAULTS.."
 set_defaults $*
+echo "GETTING OPTS.."
 get_options $*
+echo "SANITY CHECK.."
 sanity_check $*
 
+echo "STARTUP.."
 case "$venue" in
     flex)
 	start_flex_visualization $*;;
     cluster.tis)
+	start_tis_visualization $*;;
+    standalone)
 	start_tis_visualization $*;;
 esac
 
