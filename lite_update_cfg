@@ -1,0 +1,127 @@
+#!/bin/bash
+# Copyright (C) 2009 University of Louisiana at Lafayette
+# Authors: Mark McKelvy
+
+script_name=`basename ${0}`
+
+shutdown(){
+    echo "quitting."
+}
+
+show_options(){
+    #Add displayable options here
+    echo
+    echo "This script is used for updating the vrjuggler configuration in the lite center."
+    echo
+    echo "Usage: $script_name"
+    echo
+    exit
+}
+
+get_options(){
+    #Catch arguments here
+    if [ "$1" == "-?" ] ; then
+	show_options
+    fi
+}
+
+set_defaults(){
+    venue=tis
+    cluster_conf=$HOME/.clusterconf
+    datasetscfg=$HOME/datasets.cfg
+    gamepaddev=./gamepad.dev
+    run_script=$HOME/run
+    conf_out=$HOME/lime/config
+    conf_dest=$CBSUPPORT
+    if [ "$venue" == "tis" ] ; then
+	conf_dest=$conf_dest/cluster
+    fi
+    date=`date "+%Y-%m-%d_%H.%M.%S"`
+}
+
+sanity_check(){
+    if [ ! -f "$run_script" ] ; then
+	echo "Error: couldn't find run script '$run_script'. This is used for generating the vrjuggler configs."
+	exit -1
+    fi
+    if [ ! -f "$cluster_conf" ] ; then
+	echo "Error: couldn't find cluster config file '$cluster_conf'."
+	echo "Generating $cluster_conf"
+	echo "master tiscluster1 front
+slave  tiscluster2 right
+slave  tiscluster3 back
+slave  tiscluster4 left
+slave  tiscluster5 top
+slave  tiscluster6 bottom
+" > $cluster_conf
+    fi
+    if [ ! -f "$gamepaddev" ] ; then
+	echo "Generating $gamepaddev"
+	echo "gamepad/gamepad01.alias.jconf
+gamepad/gamepad01.user01.jconf
+gamepad/vrpn/gamepad01.base.jconf
+[venue]
+gamepad/vrpn/gamepad01.dev.jconf
+" > $gamepaddev
+    fi
+    if [ ! -f "$datasetscfg" ] ; then
+	echo "Generating $datasetscfg"
+	echo "1200 = 1200/1200.cfg
+hospital = lourdes_lobby/lobby.cfg:patient_room/patient_room.cfg:lourdes_chapel/chapel.cfg
+wonders = wonders/wonders.cfg:pyramids/pyramids.cfg
+" > $datasetscfg
+    fi
+}
+
+cp_and_zip(){
+    if [ -n "$1" ] ; then
+	src=$1
+	dest=$src.old-$date
+	echo "Copying $src to $dest"
+	cp -r $src $dest
+	echo "Zipping $dest"
+	zip -q -r $dest.zip $dest && echo "Removing $dest" && rm -rf $dest
+    else
+	echo "Error: Folder to cp and zip missing!"
+	exit -1
+    fi
+}
+
+backup(){
+    if [ -n "$1" ] ; then
+	dir=$1
+	echo "Backing up $1"
+	if [ -d "$dir" ] ; then
+	    cp_and_zip $dir
+	else
+	    echo "Error: directory '$dir' doesn't exist."
+	fi
+    else
+	echo "Error: Folder to backup missing!"
+	exit -1
+    fi
+}
+
+set_defaults $*
+get_options $*
+sanity_check $*
+
+echo "Running generator script.."
+$run_script --stereo -v $venue -l /research/projects/Jaguar/data --app-path=/research/projects/Jaguar/bin $datasetscfg
+
+echo
+echo "Backing up old configs.."
+backup $conf_dest/nodes
+backup $conf_dest/devices
+backup $conf_dest/plugins
+backup $conf_dest/base
+
+echo
+echo "Moving in new configs.."
+mv -v $conf_out/inputmanager.jconf $conf_dest/base/
+mv -v $conf_out/gamepad*.jconf $conf_dest/devices/gamepad/
+mv -v $conf_out/km*.jconf $conf_dest/devices/km/
+mv -v $conf_out/plugins.jconf $conf_dest/plugins/
+mv -v $conf_out/* $conf_dest/nodes/
+
+shutdown
