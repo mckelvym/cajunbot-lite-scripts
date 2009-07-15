@@ -3,6 +3,7 @@
 # Authors: Mark McKelvy
 
 script_name=`basename ${0}`
+source $CBSUPPORT/lite_scripts/lite_cfg
 
 shutdown(){
     echo "Shutting down..."
