@@ -39,7 +39,7 @@ set_defaults(){
 	cluster.tis)
 	    tis_machine_list="ws1 ws2 ws3 ws4 ws5";;
 	standalone)
-	    tis_machine_list="tiscluster2 tiscluster3 tiscluster4 tiscluster5 tiscluster6";;
+	    tis_machine_list="tiscluster1 tiscluster2 tiscluster3 tiscluster4 tiscluster5 tiscluster6";;
 	*)
 	    echo "($script_name) error: incorrect venue set - $venue."
 	    exit -1;;
@@ -93,9 +93,9 @@ start_tis_visualization(){
     cbviz_opts=$*
 
     #start local simulation
-    echo "cbviz $cbviz_opts &"
-    cbviz $cbviz_opts &
-    sleep 4
+#    echo "cbviz $cbviz_opts &"
+#    cbviz $cbviz_opts &
+#    sleep 4
 
     #start remote display
     for machine in $tis_machine_list ; do
