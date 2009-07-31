@@ -26,16 +26,30 @@ get_options(){
 }
 
 set_defaults(){
-    venue=tis
+    venue=$LITE_VENUE
+    conf_dest=$CBSUPPORT
+    case "$venue" in
+	flex)
+	    conf_dest=$conf_dest/multipipe
+	    venue=flex;;
+	cluster.tis)
+	    conf_dest=$conf_dest/cluster
+	    venue=tis;;
+	standalone)
+	    conf_dest=$conf_dest/cluster
+	    venue=tis;;
+	theater)
+	    conf_dest=$conf_dest/theater
+	    venue=theater;;
+	*)
+	    echo "($script_name) error: incorrect venue set - $venue."
+	    exit -1;;
+    esac
     cluster_conf=$HOME/.clusterconf
     datasetscfg=$HOME/datasets.cfg
     gamepaddev=./gamepad.dev
     run_script=$HOME/run
     conf_out=$HOME/lime/config
-    conf_dest=$CBSUPPORT
-    if [ "$venue" == "tis" ] ; then
-	conf_dest=$conf_dest/cluster
-    fi
     date=`date "+%Y-%m-%d_%H.%M.%S"`
 }
 
@@ -44,17 +58,25 @@ sanity_check(){
 	echo "Error: couldn't find run script '$run_script'. This is used for generating the vrjuggler configs."
 	exit -1
     fi
-    if [ ! -f "$cluster_conf" ] ; then
-	echo "Error: couldn't find cluster config file '$cluster_conf'."
-	echo "Generating $cluster_conf"
-	echo "master tiscluster1 front
+    echo "Generating $cluster_conf"
+    case "$venue" in
+	flex);;
+	tis)
+	    echo "master tiscluster1 front
 slave  tiscluster2 right
 slave  tiscluster3 back
 slave  tiscluster4 left
 slave  tiscluster5 top
 slave  tiscluster6 bottom
 " > $cluster_conf
-    fi
+	    ;;
+	theater)
+	    echo "master audcluster1 left
+slave  audcluster2 front
+slave  audcluster3 right
+" > $cluster_conf
+	    ;;
+    esac
     if [ ! -f "$gamepaddev" ] ; then
 	echo "Generating $gamepaddev"
 	echo "gamepad/gamepad01.alias.jconf

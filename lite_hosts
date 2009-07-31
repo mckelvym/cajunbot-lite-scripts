@@ -1,0 +1,20 @@
+#!/bin/bash
+
+script_name=`basename ${0}`
+case "$LITE_VENUE" in
+    flex) 
+	machine_list=
+	;;
+    cluster.tis)
+	machine_list="ws1 ws2 ws3 ws4 ws5"
+	;;
+    standalone)
+	machine_list="tiscluster1 tiscluster2 tiscluster3 tiscluster4 tiscluster5 tiscluster6"
+	;;
+    theater)
+	machine_list="audcluster1 audcluster2 audcluster3"
+	;;
+    *)
+	echo "($script_name) error: incorrect venue set - $venue."
+	exit -1;;
+esac

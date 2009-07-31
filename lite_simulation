@@ -4,32 +4,10 @@
 
 script_name=`basename ${0}`
 source $CBSUPPORT/lite_scripts/lite_cfg
+source $CBSUPPORT/lite_scripts/lite_hosts
 
 shutdown(){
-    echo "Shutting down..."
-    case "$venue" in
-	flex)
-	    pkill start_simulator
-	    sleep 1
-	    stop_testing_sequence;;
-	cluster.tis)
-	    for machine in $tis_machine_list ; do
-		ssh $machine "pkill start_simulator; sleep 1; stop_testing_sequence;" &
-	    done
-	    pkill start_simulator
-	    sleep 1
-	    stop_testing_sequence
-	    wait;;
-	standalone)
-	    for machine in $tis_machine_list ; do
-		ssh $machine "pkill start_simulator; sleep 1; stop_testing_sequence;" &
-	    done
-	    pkill start_simulator
-	    sleep 1
-	    stop_testing_sequence
-	    wait;;
-    esac
-    echo "done"
+    lite_stop_simulation
 }
 
 show_options(){
@@ -50,25 +28,14 @@ get_options(){
 }
 
 set_defaults(){
-    venue=$LITE_VENUE
-    lite_cfg=$CBSUPPORT/lite_scripts/lite_cfg
-
-    case "$venue" in
-	flex) ;;
-	cluster.tis)
-	    tis_machine_list="ws1 ws2 ws3 ws4 ws5";;
-	standalone)
-	    tis_machine_list="tiscluster1 tiscluster2 tiscluster3 tiscluster4 tiscluster5 tiscluster6";;
-	*)
-	    echo "($script_name) error: incorrect venue set - $venue."
-	    exit -1;;
-    esac
+    :
 }
 
 sanity_check(){
     if [ "$venue" != "flex" -a \
 	"$venue" != "cluster.tis" -a \
-	"$venue" != "standalone" ] ; then
+	"$venue" != "standalone" -a \
+	"$venue" != "theater" ] ; then
 	echo "($script_name) error: incorrect venue set - $venue."
 	exit -1
     fi
@@ -78,21 +45,15 @@ sanity_check(){
 	exit -1
     fi
 
-    source $lite_cfg
     if [ ! -n "$VJ_BASE_DIR" -o ! -n "$VJ_CFG_PATH" ] ; then
 	echo "($script_name) error: VJ_BASE_DIR or VJ_CFG_PATH not set."
 	exit -1
     fi
 }
 
-start_flex_simulation(){
-    echo "start_simulator $*"
-    start_simulator $*
-}
-
-start_tis_simulation(){
+start_simulation(){
     #kill running programs on other machines
-    for machine in $tis_machine_list ; do
+    for machine in $machine_list ; do
 	ssh $machine "stop_testing_sequence; clean_shared_mem" &
 	echo "ssh $machine \"stop_testing_sequence; clean_shared_mem\" &"
     done
@@ -121,7 +82,7 @@ start_tis_simulation(){
     sleep 4
 
     #start remote display
-    for machine in $tis_machine_list ; do
+    for machine in $machine_list ; do
 	ssh $machine "source ~/.bashrc; source $CBSUPPORT/lite_scripts/lite_cfg; cb_remote" &
 	ssh $machine "source ~/.bashrc; source $CBSUPPORT/lite_scripts/lite_cfg; export VPR_DEBUG_NFY_LEVEL=0; cbviz -m simulation $cbviz_opts" &
     done
@@ -131,12 +92,5 @@ set_defaults $*
 get_options $*
 sanity_check $*
 
-case "$venue" in
-    flex)
-	start_flex_simulation $*;;
-    cluster.tis)
-	start_tis_simulation $*;;
-    standalone)
-	start_tis_simulation $*;;
-esac
+start_simulation $*
 
